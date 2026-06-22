@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Family Health">
+<meta name="theme-color" content="#1a73e8">
+<title>Sachdeva Family Health</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<style>
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #1a73e8;
+  --blue-light: #e8f0fe;
+  --blue-dark: #1557b0;
+  --green: #1e8e3e;
+  --green-light: #e6f4ea;
+  --red: #d93025;
+  --red-light: #fce8e6;
+  --orange: #e37400;
+  --orange-light: #fef3e2;
+  --purple: #7b1fa2;
+  --purple-light: #f3e5f5;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f4;
+  --gray-200: #e8eaed;
+  --gray-400: #9aa0a6;
+  --gray-600: #5f6368;
+  --gray-800: #3c4043;
+  --gray-900: #202124;
+  --white: #ffffff;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--gray-50); color: var(--gray-900); }
+button { cursor: pointer; border: none; background: none; font-family: var(--font); }
+input, textarea, select { font-family: var(--font); }
+a { color: var(--blue); text-decoration: none; }
+
+/* ============================================================
+   APP SHELL
+============================================================ */
+#app { height: 100%; display: flex; flex-direction: column; }
+
+/* Status bar space on iPhone */
+.status-bar-pad { height: calc(var(--safe-top) + 0px); background: var(--blue); flex-shrink: 0; }
+
+/* Top Nav */
+.top-nav {
+  background: var(--blue);
+  color: white;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  min-height: 56px;
+}
+.top-nav .back-btn {
+  color: white;
+  font-size: 22px;
+  padding: 4px 8px 4px 0;
+  display: none;
+}
+.top-nav .back-btn.visible { display: block; }
+.top-nav h1 { font-size: 18px; font-weight: 600; flex: 1; }
+.top-nav .nav-right { display: flex; gap: 8px; }
+.top-nav .icon-btn { color: white; font-size: 20px; padding: 4px; }
+
+/* Main Content */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(72px + var(--safe-bottom));
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+}
+.bottom-nav .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  color: var(--gray-400);
+  font-size: 10px;
+  gap: 3px;
+  transition: color 0.2s;
+}
+.bottom-nav .nav-item.active { color: var(--blue); }
+.bottom-nav .nav-item .icon { font-size: 22px; }
+
+/* ============================================================
+   SCREENS
+============================================================ */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ============================================================
+   HOME SCREEN
+============================================================ */
+.home-header {
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%);
+  padding: 24px 20px 32px;
+  color: white;
+}
+.home-header h2 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.home-header p { font-size: 14px; opacity: 0.85; }
+
+.family-grid {
+  padding: 20px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: -16px;
+}
+.member-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.member-card:active { transform: scale(0.97); }
+.member-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 10px;
+}
+.member-card h3 { font-size: 14px; font-weight: 600; color: var(--gray-900); margin-bottom: 2px; }
+.member-card .relation { font-size: 12px; color: var(--gray-600); margin-bottom: 6px; }
+.blood-badge {
+  display: inline-block;
+  background: var(--red-light);
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* Quick actions */
+.quick-actions {
+  padding: 0 16px 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.quick-action-btn {
+  background: white;
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-action-btn:active { transform: scale(0.97); }
+.quick-action-btn .qa-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.quick-action-btn span { font-size: 13px; font-weight: 500; color: var(--gray-800); }
+
+.section-label {
+  padding: 16px 16px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ============================================================
+   MEMBER DETAIL SCREEN
+============================================================ */
+.member-header {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+}
+.member-header-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.member-header-info h2 { font-size: 18px; font-weight: 700; margin-bottom: 3px; }
+.member-header-info .meta { font-size: 13px; color: var(--gray-600); }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+.tab-content { display: none; padding: 16px; }
+.tab-content.active { display: block; }
+
+/* Cards */
+.info-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+.info-card h4 { font-size: 13px; font-weight: 600; color: var(--gray-600); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+
+.med-item {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.med-item:last-child { border-bottom: none; padding-bottom: 0; }
+.med-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.med-dot.inactive { background: var(--gray-400); }
+.med-name { font-size: 14px; font-weight: 600; color: var(--gray-900); }
+.med-meta { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  position: relative;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 32px;
+  bottom: -12px;
+  width: 2px;
+  background: var(--gray-200);
+}
+.timeline-item:last-child::before { display: none; }
+.tl-dot {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.tl-date { font-size: 12px; color: var(--gray-600); margin-bottom: 2px; }
+.tl-title { font-size: 14px; font-weight: 600; }
+.tl-desc { font-size: 13px; color: var(--gray-600); margin-top: 3px; }
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+  cursor: pointer;
+}
+.doc-item:last-child { border-bottom: none; }
+.doc-icon {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  background: var(--orange-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.doc-name { font-size: 14px; font-weight: 500; }
+.doc-meta { font-size: 12px; color: var(--gray-600); }
+
+/* Emergency Card */
+.emergency-card {
+  background: linear-gradient(135deg, #d93025 0%, #b71c1c 100%);
+  border-radius: var(--radius);
+  padding: 20px;
+  color: white;
+  margin-bottom: 16px;
+}
+.emergency-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.emergency-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+.emergency-row .label { font-size: 12px; opacity: 0.8; min-width: 80px; margin-top: 1px; }
+.emergency-row .value { font-size: 14px; font-weight: 600; }
+
+/* ============================================================
+   DOCTORS SCREEN
+============================================================ */
+.doctor-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.doctor-icon {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--blue-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.doctor-info h3 { font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+.doctor-info .specialty { font-size: 13px; color: var(--gray-600); margin-bottom: 6px; }
+.doctor-info .type-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: var(--blue-light);
+  color: var(--blue);
+  margin-bottom: 6px;
+}
+.doctor-info .phone-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--blue);
+  margin-top: 4px;
+}
+
+/* ============================================================
+   ADMIN SCREEN
+============================================================ */
+.admin-lock {
+  padding: 40px 24px;
+  text-align: center;
+}
+.admin-lock .lock-icon { font-size: 56px; margin-bottom: 16px; }
+.admin-lock h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.admin-lock p { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; }
+.pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+.pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--gray-400); }
+.pin-dot.filled { background: var(--blue); border-color: var(--blue); }
+.pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 280px; margin: 0 auto; }
+.pin-key {
+  height: 60px;
+  border-radius: var(--radius);
+  background: white;
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--gray-900);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+}
+.pin-key:active { background: var(--gray-100); }
+.pin-key.delete { color: var(--red); font-size: 16px; }
+
+/* Admin actions */
+.admin-actions { padding: 16px; }
+.admin-action-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-action-card:active { background: var(--gray-50); }
+.admin-action-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.admin-action-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.admin-action-card p { font-size: 13px; color: var(--gray-600); }
+.admin-action-card .chevron { margin-left: auto; color: var(--gray-400); font-size: 18px; }
+
+/* ============================================================
+   MODAL / BOTTOM SHEET
+============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.bottom-sheet {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 0 0 calc(20px + var(--safe-bottom));
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--gray-200);
+  border-radius: 2px;
+  margin: 12px auto 4px;
+}
+.sheet-header {
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sheet-header h2 { font-size: 17px; font-weight: 700; }
+.sheet-close { font-size: 22px; color: var(--gray-600); padding: 4px; }
+.sheet-body { padding: 20px; }
+
+/* Forms */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--gray-900);
+  background: white;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+.form-textarea { min-height: 80px; resize: vertical; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Image Upload Area */
+.upload-area {
+  border: 2px dashed var(--gray-200);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+.upload-area:active { border-color: var(--blue); background: var(--blue-light); }
+.upload-area input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+.upload-area .upload-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-area p { font-size: 14px; color: var(--gray-600); }
+.upload-area small { font-size: 12px; color: var(--gray-400); margin-top: 4px; display: block; }
+
+/* Image Preview */
+.image-preview {
+  position: relative;
+  margin-top: 12px;
+  display: none;
+}
+.image-preview img { width: 100%; border-radius: var(--radius-sm); max-height: 200px; object-fit: cover; }
+.image-preview .remove-img {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.6); color: white;
+  border-radius: 50%; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; cursor: pointer;
+}
+
+/* Extraction Preview */
+.extraction-preview {
+  background: var(--green-light);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  margin-top: 12px;
+  display: none;
+}
+.extraction-preview h4 { font-size: 13px; font-weight: 700; color: var(--green); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.extraction-field { font-size: 13px; margin-bottom: 4px; }
+.extraction-field strong { color: var(--gray-800); }
+
+/* Buttons */
+.btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  border: none;
+}
+.btn:active { transform: scale(0.98); opacity: 0.9; }
+.btn-primary { background: var(--blue); color: white; }
+.btn-secondary { background: var(--gray-100); color: var(--gray-800); }
+.btn-danger { background: var(--red); color: white; }
+.btn-outline { background: transparent; color: var(--blue); border: 1.5px solid var(--blue); }
+.btn + .btn { margin-top: 10px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Loading spinner */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: calc(80px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--gray-900);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+  z-index: 300;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Loading screen */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--blue);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 1000;
+  transition: opacity 0.4s;
+}
+#loading-screen h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+#loading-screen p { font-size: 14px; opacity: 0.8; margin-bottom: 32px; }
+.load-bar { width: 200px; height: 3px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; }
+.load-bar-fill { height: 100%; background: white; border-radius: 2px; animation: loadAnim 1.5s ease-in-out; }
+@keyframes loadAnim { from { width: 0; } to { width: 100%; } }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--gray-600);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* Offline banner */
+.offline-banner {
+  background: var(--orange);
+  color: white;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  display: none;
+}
+.offline-banner.visible { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+  <div style="font-size:52px;margin-bottom:16px;">🏥</div>
+  <h1>Family Health</h1>
+  <p>Sachdeva Family</p>
+  <div class="load-bar"><div class="load-bar-fill"></div></div>
+</div>
+
+<!-- Offline Banner -->
+<div class="offline-banner" id="offline-banner">📵 Offline — showing cached data</div>
+
+<!-- App Shell -->
+<div id="app">
+  <div class="status-bar-pad"></div>
+
+  <!-- Top Nav -->
+  <nav class="top-nav">
+    <button class="back-btn" id="back-btn" onclick="goBack()">‹</button>
+    <h1 id="nav-title">Family Health</h1>
+    <div class="nav-right">
+      <button class="icon-btn" onclick="refreshData()" title="Refresh">↻</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="main-content">
+
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="screen active">
+      <div class="home-header">
+        <h2>👨‍👩‍👧‍👦 Sachdeva Family</h2>
+        <p id="home-subtitle">Loading family health data…</p>
+      </div>
+
+      <div class="section-label">Family Members</div>
+      <div class="family-grid" id="family-grid">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="section-label">Quick Access</div>
+      <div class="quick-actions">
+        <div class="quick-action-btn" onclick="showScreen('doctors')">
+          <div class="qa-icon" style="background:#e8f0fe;">👨‍⚕️</div>
+          <span>Doctors</span>
+        </div>
+        <div class="quick-action-btn" onclick="showEmergencyAll()">
+          <div class="qa-icon" style="background:#fce8e6;">🆘</div>
+          <span>Emergency</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEMBER DETAIL SCREEN -->
+    <div id="screen-member" class="screen">
+      <div id="member-header"></div>
+      <div class="tabs" id="member-tabs">
+        <button class="tab-btn active" onclick="switchTab('meds')">💊 Meds</button>
+        <button class="tab-btn" onclick="switchTab('timeline')">📅 Timeline</button>
+        <button class="tab-btn" onclick="switchTab('docs')">📄 Docs</button>
+        <button class="tab-btn" onclick="switchTab('emergency')">🆘 Emergency</button>
+      </div>
+      <div id="tab-meds" class="tab-content active"></div>
+      <div id="tab-timeline" class="tab-content"></div>
+      <div id="tab-docs" class="tab-content"></div>
+      <div id="tab-emergency" class="tab-content"></div>
+    </div>
+
+    <!-- DOCTORS SCREEN -->
+    <div id="screen-doctors" class="screen">
+      <div style="padding:16px;" id="doctors-list"></div>
+    </div>
+
+    <!-- ADMIN SCREEN -->
+    <div id="screen-admin" class="screen">
+      <!-- PIN Lock -->
+      <div id="admin-lock" class="admin-lock">
+        <div class="lock-icon">🔐</div>
+        <h2>Admin Access</h2>
+        <p>Enter your PIN to manage health data</p>
+        <div class="pin-dots" id="pin-dots">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-keypad">
+          <button class="pin-key" onclick="pinKey('1')">1</button>
+          <button class="pin-key" onclick="pinKey('2')">2</button>
+          <button class="pin-key" onclick="pinKey('3')">3</button>
+          <button class="pin-key" onclick="pinKey('4')">4</button>
+          <button class="pin-key" onclick="pinKey('5')">5</button>
+          <button class="pin-key" onclick="pinKey('6')">6</button>
+          <button class="pin-key" onclick="pinKey('7')">7</button>
+          <button class="pin-key" onclick="pinKey('8')">8</button>
+          <button class="pin-key" onclick="pinKey('9')">9</button>
+          <button class="pin-key" onclick="pinKey('0')">0</button>
+          <button class="pin-key delete" onclick="pinDelete()">⌫</button>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard (shown after PIN) -->
+      <div id="admin-dashboard" style="display:none;">
+        <div class="admin-actions">
+          <div style="padding:16px 0 8px;font-size:15px;font-weight:600;color:var(--gray-600);">Add Data</div>
+
+          <div class="admin-action-card" onclick="openSheet('medication')">
+            <div class="admin-action-icon" style="background:var(--green-light);">💊</div>
+            <div>
+              <h3>Add Medication</h3>
+              <p>Type or scan a prescription</p>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+
+          <div class="admin-action-card" onclick="openSheet('timeline')">
+            <div class="admin-action-icon" style="background:var(--blue-light);">📅</div>
+            <div>
+              <h3>Add Medical Event</h3>
+              <p>Surgery, diagnosis, visit</p>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+
+          <div class="admin-action-card" onclick="openSheet('document')">
+            <div class="admin-action-icon" style="background:var(--orange-light);">📄</div>
+            <div>
+              <h3>Upload Document</h3>
+              <p>Report, prescription image</p>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+
+          <div class="admin-action-card" onclick="openSheet('doctor')">
+            <div class="admin-action-icon" style="background:var(--purple-light);">👨‍⚕️</div>
+            <div>
+              <h3>Add Doctor</h3>
+              <p>Add specialist or clinic</p>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+
+          <div style="padding:16px 0 8px;font-size:15px;font-weight:600;color:var(--gray-600);">Settings</div>
+
+          <div class="admin-action-card" onclick="openSheet('settings')">
+            <div class="admin-action-icon" style="background:var(--gray-100);">⚙️</div>
+            <div>
+              <h3>App Settings</h3>
+              <p>API URL, PIN change</p>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+
+          <button class="btn btn-secondary" onclick="adminLogout()" style="margin-top:8px;">Lock Admin</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end main-content -->
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showScreen('home')" id="nav-home">
+      <span class="icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="showScreen('doctors')" id="nav-doctors">
+      <span class="icon">👨‍⚕️</span>
+      <span>Doctors</span>
+    </button>
+    <button class="nav-item" onclick="showScreen('admin')" id="nav-admin">
+      <span class="icon">🔐</span>
+      <span>Admin</span>
+    </button>
+  </nav>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeSheetOnOverlay(event)">
+  <div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h2 id="sheet-title">Add Item</h2>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+    <div class="sheet-body" id="sheet-body"></div>
+  </div>
+</div>
+
+<!-- Emergency Modal (full screen) -->
+<div id="emergency-modal" style="display:none;position:fixed;inset:0;background:white;z-index:300;overflow-y:auto;padding-bottom:32px;">
+  <div style="background:#d93025;padding:calc(var(--safe-top) + 20px) 20px 20px;display:flex;align-items:center;gap:12px;">
+    <button onclick="closeEmergencyModal()" style="color:white;font-size:24px;padding:4px 8px 4px 0;">‹</button>
+    <h2 style="color:white;font-size:18px;font-weight:700;">🆘 Emergency Cards</h2>
+  </div>
+  <div id="emergency-modal-content" style="padding:16px;"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — update with your deployed GAS URL
+// ============================================================
+const APP_CONFIG = {
+  GAS_URL: localStorage.getItem('gas_url') || 'YOUR_GAS_WEB_APP_URL_HERE',
+  ADMIN_PIN: localStorage.getItem('admin_pin') || '1234',
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  data: null,
+  currentMember: null,
+  currentTab: 'meds',
+  adminUnlocked: false,
+  pinBuffer: '',
+  screenStack: ['home'],
+  isOnline: navigator.onLine,
+};
+
+const MEMBER_COLORS = ['#1a73e8','#e37400','#1e8e3e','#7b1fa2','#d93025'];
+const MEMBER_EMOJIS = { self: '👤', wife: '👩', father: '👴', mother: '👵', brother: '👦' };
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', async () => {
+  setupOfflineDetection();
+  await loadData();
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.opacity = '0';
+    setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 400);
+  }, 1200);
+});
+
+function setupOfflineDetection() {
+  window.addEventListener('online', () => { state.isOnline = true; document.getElementById('offline-banner').classList.remove('visible'); });
+  window.addEventListener('offline', () => { state.isOnline = false; document.getElementById('offline-banner').classList.add('visible'); });
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadData(forceRefresh = false) {
+  const cacheKey = 'health_data_cache';
+  const cacheTimeKey = 'health_data_cache_time';
+
+  if (!forceRefresh) {
+    const cached = localStorage.getItem(cacheKey);
+    const cacheTime = localStorage.getItem(cacheTimeKey);
+    if (cached && cacheTime && (Date.now() - parseInt(cacheTime)) < 300000) {
+      state.data = JSON.parse(cached);
+      renderHome();
+      return;
+    }
+  }
+
+  if (!state.isOnline) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      state.data = JSON.parse(cached);
+      renderHome();
+      showToast('Showing cached data (offline)');
+    }
+    return;
+  }
+
+  if (APP_CONFIG.GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    state.data = getDemoData();
+    renderHome();
+    showToast('Demo mode — configure GAS URL in Admin → Settings');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${APP_CONFIG.GAS_URL}?action=all`, { cache: 'no-store' });
+    const json = await res.json();
+    if (json.success) {
+      state.data = json.data;
+      localStorage.setItem(cacheKey, JSON.stringify(state.data));
+      localStorage.setItem(cacheTimeKey, Date.now().toString());
+      renderHome();
+    }
+  } catch (err) {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      state.data = JSON.parse(cached);
+      showToast('Using cached data');
+    } else {
+      state.data = getDemoData();
+      showToast('Demo mode active');
+    }
+    renderHome();
+  }
+}
+
+async function refreshData() {
+  showToast('Refreshing…');
+  await loadData(true);
+  showToast('Updated ✓');
+}
+
+// ============================================================
+// DEMO DATA (shown before GAS is configured)
+// ============================================================
+function getDemoData() {
+  return {
+    members: [
+      { id: 'shubham', name: 'Shubham Sachdeva', relation: 'self', dob: '1991-01-29', blood_group: 'B-', phone: '', allergies: '' },
+      { id: 'navjit', name: 'Navjit Kaur', relation: 'wife', dob: '1991-02-18', blood_group: 'AB+', phone: '', allergies: '' },
+      { id: 'ashok', name: 'Ashok Sachdeva', relation: 'father', dob: '1959-11-17', blood_group: 'B+', phone: '', allergies: '' },
+      { id: 'ranju', name: 'Ranju Sachdeva', relation: 'mother', dob: '1961-04-05', blood_group: 'B+', phone: '', allergies: '' },
+      { id: 'rohit', name: 'Rohit Sachdeva', relation: 'brother', dob: '1987-06-08', blood_group: 'O+', phone: '', allergies: '' },
+    ],
+    medications: [
+      { id: 'm1', member_id: 'ashok', drug: 'Ryzodeg Flex Insulin', dose: '32U AM, 22U PM', timing: 'Morning & Evening', active: true, notes: 'Diabetes insulin' },
+      { id: 'm2', member_id: 'ashok', drug: 'Wildaform-M-1000', dose: '1 tablet', timing: 'Morning & Evening', active: true, notes: 'Diabetes medication' },
+      { id: 'm3', member_id: 'ashok', drug: 'Fenosol', dose: '160mg', timing: 'Morning', active: true, notes: 'Lipid management' },
+      { id: 'm4', member_id: 'ashok', drug: 'Folifresh-5', dose: '1 tablet', timing: 'Morning', active: true, notes: 'Folic acid' },
+      { id: 'm5', member_id: 'ashok', drug: 'Methylcobalamin', dose: '1500mcg', timing: 'Morning', active: true, notes: 'Vitamin B12' },
+      { id: 'm6', member_id: 'ashok', drug: 'Atorvastatin', dose: '20mg', timing: 'Evening', active: true, notes: 'Cholesterol' },
+      { id: 'm7', member_id: 'ashok', drug: 'Vigamox', dose: '1 drop', timing: 'As prescribed', active: true, notes: 'Eye drop - antibiotic' },
+      { id: 'm8', member_id: 'ashok', drug: 'Nevanac', dose: '1 drop', timing: 'As prescribed', active: true, notes: 'Eye drop - anti-inflammatory' },
+      { id: 'm9', member_id: 'ashok', drug: 'Pred Forte', dose: '1 drop', timing: 'As prescribed', active: true, notes: 'Eye drop - steroid' },
+      { id: 'm10', member_id: 'ashok', drug: 'Systane Ultra', dose: '1-2 drops', timing: 'As needed', active: true, notes: 'Lubricating drops' },
+    ],
+    timeline: [
+      { id: 't1', member_id: 'ashok', date: '2026-01-12', event_type: 'Surgery', description: 'Phaco Toric cataract surgery — left eye', doctor: 'Grewal Eye Institute', hospital: 'Grewal Eye Institute, Chandigarh', notes: 'Uneventful postoperative course' },
+      { id: 't2', member_id: 'ashok', date: '2026-01-12', event_type: 'Diagnosis', description: 'Pseudophakia OD; Aphakia acquired OS', doctor: 'Grewal Eye Institute', hospital: 'Grewal Eye Institute', notes: 'Advised TSF IOL left eye under local anesthesia' },
+    ],
+    documents: [],
+    doctors: [
+      { id: 'd1', name: 'Dr. Rishi Malik', specialty: 'General Physician / Family Doctor', phone: '', type: 'virtual', clinic: '', notes: 'Virtual family doctor' },
+      { id: 'd2', name: 'Grewal Eye Institute', specialty: 'Ophthalmology', phone: '', type: 'specialist', clinic: 'Chandigarh', notes: 'Ashok cataract surgery Jan 2026' },
+    ],
+  };
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(name, pushStack = true) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${name}`).classList.add('active');
+
+  // Update bottom nav
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${name}`);
+  if (navEl) navEl.classList.add('active');
+
+  // Back button
+  const isSub = name === 'member';
+  document.getElementById('back-btn').classList.toggle('visible', isSub);
+
+  // Title
+  const titles = { home: 'Family Health', member: state.currentMember?.name || 'Member', doctors: 'Our Doctors', admin: 'Admin' };
+  document.getElementById('nav-title').textContent = titles[name] || 'Family Health';
+
+  if (pushStack) {
+    if (name !== state.screenStack[state.screenStack.length - 1]) {
+      state.screenStack.push(name);
+    }
+  }
+}
+
+function goBack() {
+  if (state.screenStack.length > 1) {
+    state.screenStack.pop();
+    const prev = state.screenStack[state.screenStack.length - 1];
+    showScreen(prev, false);
+  }
+}
+
+// ============================================================
+// HOME RENDER
+// ============================================================
+function renderHome() {
+  if (!state.data) return;
+  const members = state.data.members || [];
+  document.getElementById('home-subtitle').textContent = `${members.length} members · Last updated ${new Date().toLocaleTimeString()}`;
+
+  const grid = document.getElementById('family-grid');
+  grid.innerHTML = members.map((m, i) => `
+    <div class="member-card" onclick="openMember('${m.id}')">
+      <div class="member-avatar" style="background:${MEMBER_COLORS[i % MEMBER_COLORS.length]}">
+        ${(m.name || '?')[0]}
+      </div>
+      <h3>${m.name}</h3>
+      <div class="relation">${capitalize(m.relation || '')}</div>
+      <span class="blood-badge">🩸 ${m.blood_group || '—'}</span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// MEMBER DETAIL
+// ============================================================
+function openMember(memberId) {
+  if (!state.data) return;
+  const member = state.data.members.find(m => m.id === memberId);
+  if (!member) return;
+  state.currentMember = member;
+
+  const memberIndex = state.data.members.indexOf(member);
+  const color = MEMBER_COLORS[memberIndex % MEMBER_COLORS.length];
+  const age = calcAge(member.dob);
+
+  document.getElementById('member-header').innerHTML = `
+    <div class="member-header">
+      <div class="member-header-avatar" style="background:${color}">${member.name[0]}</div>
+      <div class="member-header-info">
+        <h2>${member.name}</h2>
+        <div class="meta">${capitalize(member.relation)} · Age ${age} · <span style="color:var(--red);font-weight:600;">${member.blood_group}</span></div>
+        ${member.phone ? `<div class="meta" style="margin-top:4px;">📞 ${member.phone}</div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Reset tabs
+  document.querySelectorAll('.tab-btn').forEach((t, i) => t.classList.toggle('active', i === 0));
+  switchTab('meds', false);
+
+  showScreen('member');
+}
+
+function switchTab(tab, render = true) {
+  state.currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(t => {
+    t.classList.toggle('active', t.getAttribute('onclick').includes(`'${tab}'`));
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+
+  if (!render) return;
+  const m = state.currentMember;
+  if (!m) return;
+
+  if (tab === 'meds') renderMeds(m);
+  if (tab === 'timeline') renderTimeline(m);
+  if (tab === 'docs') renderDocs(m);
+  if (tab === 'emergency') renderEmergencyTab(m);
+}
+
+function renderMeds(member) {
+  const meds = (state.data.medications || []).filter(med => med.member_id === member.id);
+  const active = meds.filter(m => String(m.active) === 'true' || m.active === true);
+  const inactive = meds.filter(m => String(m.active) !== 'true' && m.active !== true);
+
+  const el = document.getElementById('tab-meds');
+  if (meds.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">💊</div><p>No medications recorded</p></div>`;
+    return;
+  }
+
+  let html = '';
+  if (active.length > 0) {
+    html += `<div class="info-card"><h4>Active Medications (${active.length})</h4>`;
+    html += active.map(med => `
+      <div class="med-item">
+        <div class="med-dot"></div>
+        <div>
+          <div class="med-name">${med.drug}</div>
+          <div class="med-meta">${med.dose} · ${med.timing}</div>
+          ${med.notes ? `<div class="med-meta" style="color:var(--gray-400)">${med.notes}</div>` : ''}
+        </div>
+      </div>
+    `).join('');
+    html += '</div>';
+  }
+  if (inactive.length > 0) {
+    html += `<div class="info-card"><h4>Past Medications</h4>`;
+    html += inactive.map(med => `
+      <div class="med-item">
+        <div class="med-dot inactive"></div>
+        <div>
+          <div class="med-name" style="color:var(--gray-400)">${med.drug}</div>
+          <div class="med-meta">${med.dose} · ${med.timing}</div>
+        </div>
+      </div>
+    `).join('');
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderTimeline(member) {
+  const events = (state.data.timeline || [])
+    .filter(e => e.member_id === member.id)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const el = document.getElementById('tab-timeline');
+  if (events.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📅</div><p>No events recorded</p></div>`;
+    return;
+  }
+
+  const typeEmoji = { Surgery: '🔪', Diagnosis: '🩺', Visit: '🏥', Medication: '💊', Lab: '🧪', Other: '📋' };
+  el.innerHTML = `<div class="info-card"><h4>Medical History</h4>` +
+    events.map(ev => `
+      <div class="timeline-item">
+        <div class="tl-dot">${typeEmoji[ev.event_type] || '📋'}</div>
+        <div>
+          <div class="tl-date">${formatDate(ev.date)} · ${ev.event_type}</div>
+          <div class="tl-title">${ev.description}</div>
+          ${ev.doctor ? `<div class="tl-desc">👨‍⚕️ ${ev.doctor}</div>` : ''}
+          ${ev.hospital ? `<div class="tl-desc">🏥 ${ev.hospital}</div>` : ''}
+          ${ev.notes ? `<div class="tl-desc" style="margin-top:4px;padding:6px 10px;background:var(--gray-50);border-radius:6px;">${ev.notes}</div>` : ''}
+        </div>
+      </div>
+    `).join('') + '</div>';
+}
+
+function renderDocs(member) {
+  const docs = (state.data.documents || []).filter(d => d.member_id === member.id);
+  const el = document.getElementById('tab-docs');
+  if (docs.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">📄</div><p>No documents uploaded</p></div>`;
+    return;
+  }
+
+  const typeIcon = { prescription: '💊', report: '🧪', surgery: '🔪', general: '📄' };
+  el.innerHTML = `<div class="info-card"><h4>Documents (${docs.length})</h4>` +
+    docs.map(doc => `
+      <div class="doc-item" onclick="${doc.drive_url ? `window.open('${doc.drive_url}','_blank')` : ''}">
+        <div class="doc-icon">${typeIcon[doc.type] || '📄'}</div>
+        <div style="flex:1">
+          <div class="doc-name">${doc.title}</div>
+          <div class="doc-meta">${formatDate(doc.date)} · ${capitalize(doc.type)}</div>
+          ${doc.extracted_text ? `<div class="doc-meta" style="margin-top:3px;color:var(--green);">✓ Data extracted</div>` : ''}
+        </div>
+        ${doc.drive_url ? '<span style="color:var(--gray-400)">›</span>' : ''}
+      </div>
+    `).join('') + '</div>';
+}
+
+function renderEmergencyTab(member) {
+  const el = document.getElementById('tab-emergency');
+  el.innerHTML = buildEmergencyCard(member);
+}
+
+function buildEmergencyCard(member) {
+  const activeMeds = (state.data.medications || [])
+    .filter(m => m.member_id === member.id && (String(m.active) === 'true' || m.active === true));
+
+  return `
+    <div class="emergency-card">
+      <h3>🆘 Emergency Card — ${member.name}</h3>
+      <div class="emergency-row">
+        <span class="label">Blood Group</span>
+        <span class="value">${member.blood_group || '—'}</span>
+      </div>
+      <div class="emergency-row">
+        <span class="label">DOB</span>
+        <span class="value">${formatDate(member.dob)} (Age ${calcAge(member.dob)})</span>
+      </div>
+      <div class="emergency-row">
+        <span class="label">Allergies</span>
+        <span class="value">${member.allergies || 'None known'}</span>
+      </div>
+      <div class="emergency-row">
+        <span class="label">Emergency</span>
+        <span class="value">${member.emergency_contact || 'Shubham Sachdeva'}</span>
+      </div>
+    </div>
+    ${activeMeds.length > 0 ? `
+      <div class="info-card">
+        <h4>Current Medications</h4>
+        ${activeMeds.map(m => `
+          <div class="med-item">
+            <div class="med-dot"></div>
+            <div>
+              <div class="med-name">${m.drug}</div>
+              <div class="med-meta">${m.dose} · ${m.timing}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+    <div class="info-card" style="border:1.5px solid var(--blue)">
+      <h4>Family Doctor</h4>
+      <div style="font-size:14px;font-weight:600;">Dr. Rishi Malik</div>
+      <div style="font-size:13px;color:var(--gray-600);">Virtual Family Doctor</div>
+    </div>
+  `;
+}
+
+// ============================================================
+// DOCTORS SCREEN
+// ============================================================
+function renderDoctors() {
+  const doctors = state.data?.doctors || [];
+  const el = document.getElementById('doctors-list');
+  if (doctors.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">👨‍⚕️</div><p>No doctors added yet</p></div>`;
+    return;
+  }
+
+  el.innerHTML = doctors.map(d => `
+    <div class="doctor-card">
+      <div class="doctor-icon">👨‍⚕️</div>
+      <div class="doctor-info" style="flex:1">
+        <h3>${d.name}</h3>
+        <div class="specialty">${d.specialty}</div>
+        <span class="type-badge">${capitalize(d.type || 'specialist')}</span>
+        ${d.clinic ? `<div style="font-size:13px;color:var(--gray-600);">📍 ${d.clinic}</div>` : ''}
+        ${d.notes ? `<div style="font-size:12px;color:var(--gray-400);margin-top:4px;">${d.notes}</div>` : ''}
+        ${d.phone ? `<div class="phone-btn">📞 ${d.phone}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// EMERGENCY ALL (from home)
+// ============================================================
+function showEmergencyAll() {
+  if (!state.data) return;
+  const members = state.data.members || [];
+  document.getElementById('emergency-modal-content').innerHTML =
+    members.map(m => buildEmergencyCard(m)).join('<div style="height:20px;"></div>');
+  document.getElementById('emergency-modal').style.display = 'block';
+}
+function closeEmergencyModal() {
+  document.getElementById('emergency-modal').style.display = 'none';
+}
+
+// ============================================================
+// ADMIN / PIN
+// ============================================================
+let pinVal = '';
+function pinKey(num) {
+  if (pinVal.length >= 4) return;
+  pinVal += num;
+  updatePinDots();
+  if (pinVal.length === 4) {
+    setTimeout(() => checkPin(), 150);
+  }
+}
+function pinDelete() {
+  pinVal = pinVal.slice(0, -1);
+  updatePinDots();
+}
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`pd${i}`).classList.toggle('filled', i < pinVal.length);
+  }
+}
+function checkPin() {
+  if (pinVal === APP_CONFIG.ADMIN_PIN) {
+    state.adminUnlocked = true;
+    document.getElementById('admin-lock').style.display = 'none';
+    document.getElementById('admin-dashboard').style.display = 'block';
+    pinVal = '';
+    updatePinDots();
+    showToast('Admin unlocked ✓');
+  } else {
+    showToast('Wrong PIN');
+    pinVal = '';
+    updatePinDots();
+  }
+}
+function adminLogout() {
+  state.adminUnlocked = false;
+  document.getElementById('admin-lock').style.display = 'block';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  pinVal = '';
+  updatePinDots();
+}
+
+// ============================================================
+// BOTTOM SHEET
+// ============================================================
+let currentSheet = null;
+function openSheet(type) {
+  currentSheet = type;
+  const titles = {
+    medication: '💊 Add Medication',
+    timeline: '📅 Add Medical Event',
+    document: '📄 Upload Document',
+    doctor: '👨‍⚕️ Add Doctor',
+    settings: '⚙️ App Settings',
+  };
+  document.getElementById('sheet-title').textContent = titles[type] || 'Add Item';
+  document.getElementById('sheet-body').innerHTML = buildSheetForm(type);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeSheet() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentSheet = null;
+}
+function closeSheetOnOverlay(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeSheet();
+}
+
+function memberOptions() {
+  return (state.data?.members || []).map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+function buildSheetForm(type) {
+  if (type === 'medication') return `
+    <div class="form-group">
+      <label class="form-label">Family Member *</label>
+      <select class="form-select" id="f-member">${memberOptions()}</select>
+    </div>
+    <div class="upload-area" id="upload-area-med">
+      <input type="file" accept="image/*" capture="environment" onchange="handleImageUpload(this,'prescription')">
+      <div class="upload-icon">📷</div>
+      <p>Tap to scan prescription</p>
+      <small>Camera or gallery · JPG/PNG</small>
+    </div>
+    <div class="image-preview" id="img-preview-med">
+      <img id="img-prev-med" src="" alt="">
+      <div class="remove-img" onclick="removeImage('med')">✕</div>
+    </div>
+    <div class="extraction-preview" id="extract-med"></div>
+    <div style="text-align:center;padding:10px 0;color:var(--gray-400);font-size:13px;">— or type manually —</div>
+    <div class="form-group"><label class="form-label">Drug Name *</label><input class="form-input" id="f-drug" placeholder="e.g. Atorvastatin"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Dose *</label><input class="form-input" id="f-dose" placeholder="e.g. 20mg"></div>
+      <div class="form-group"><label class="form-label">Timing *</label><input class="form-input" id="f-timing" placeholder="e.g. Evening"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Start Date</label><input class="form-input" type="date" id="f-start" value="${today()}"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Additional notes…"></textarea></div>
+    <button class="btn btn-primary" onclick="submitForm('medication')" id="submit-btn">Add Medication</button>
+  `;
+
+  if (type === 'timeline') return `
+    <div class="form-group"><label class="form-label">Family Member *</label><select class="form-select" id="f-member">${memberOptions()}</select></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input class="form-input" type="date" id="f-date" value="${today()}"></div>
+      <div class="form-group">
+        <label class="form-label">Type *</label>
+        <select class="form-select" id="f-event-type">
+          <option>Surgery</option><option>Diagnosis</option><option>Visit</option><option>Lab</option><option>Medication</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Description *</label><input class="form-input" id="f-desc" placeholder="What happened?"></div>
+    <div class="form-group"><label class="form-label">Doctor / Hospital</label><input class="form-input" id="f-doctor" placeholder="Dr. name or hospital"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Additional notes…"></textarea></div>
+    <button class="btn btn-primary" onclick="submitForm('timeline')" id="submit-btn">Add Event</button>
+  `;
+
+  if (type === 'document') return `
+    <div class="form-group"><label class="form-label">Family Member *</label><select class="form-select" id="f-member">${memberOptions()}</select></div>
+    <div class="form-group">
+      <label class="form-label">Document Type *</label>
+      <select class="form-select" id="f-doc-type" onchange="updateDocUpload()">
+        <option value="prescription">Prescription</option>
+        <option value="report">Lab Report</option>
+        <option value="surgery">Surgery Record</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div class="upload-area" id="upload-area-doc">
+      <input type="file" accept="image/*" capture="environment" onchange="handleImageUpload(this,'auto')">
+      <div class="upload-icon">📷</div>
+      <p>Tap to photograph document</p>
+      <small>Camera or gallery · Will auto-extract data via AI</small>
+    </div>
+    <div class="image-preview" id="img-preview-doc">
+      <img id="img-prev-doc" src="" alt="">
+      <div class="remove-img" onclick="removeImage('doc')">✕</div>
+    </div>
+    <div class="extraction-preview" id="extract-doc"></div>
+    <div class="form-group" style="margin-top:12px"><label class="form-label">Document Title *</label><input class="form-input" id="f-title" placeholder="e.g. Eye report Jan 2026"></div>
+    <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="f-date" value="${today()}"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes" placeholder="Any additional notes…"></textarea></div>
+    <button class="btn btn-primary" onclick="submitForm('document')" id="submit-btn">Upload Document</button>
+  `;
+
+  if (type === 'doctor') return `
+    <div class="form-group"><label class="form-label">Name *</label><input class="form-input" id="f-name" placeholder="Dr. Rishi Malik"></div>
+    <div class="form-group"><label class="form-label">Specialty *</label><input class="form-input" id="f-specialty" placeholder="e.g. Ophthalmology"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="f-phone" type="tel" placeholder="+91..."></div>
+      <div class="form-group">
+        <label class="form-label">Type</label>
+        <select class="form-select" id="f-type"><option value="virtual">Virtual</option><option value="specialist">Specialist</option><option value="general">General</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Clinic / Hospital</label><input class="form-input" id="f-clinic" placeholder="Clinic name"></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="f-notes"></textarea></div>
+    <button class="btn btn-primary" onclick="submitForm('doctor')" id="submit-btn">Add Doctor</button>
+  `;
+
+  if (type === 'settings') return `
+    <div class="form-group">
+      <label class="form-label">GAS Web App URL</label>
+      <input class="form-input" id="f-gas-url" value="${APP_CONFIG.GAS_URL}" placeholder="https://script.google.com/macros/s/...">
+      <div style="font-size:12px;color:var(--gray-400);margin-top:4px;">Paste your deployed Google Apps Script URL</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Admin PIN (4 digits)</label>
+      <input class="form-input" id="f-pin" type="number" maxlength="4" value="${APP_CONFIG.ADMIN_PIN}" placeholder="1234">
+    </div>
+    <button class="btn btn-primary" onclick="saveSettings()">Save Settings</button>
+    <button class="btn btn-secondary" onclick="clearCache()">Clear Cache & Reload</button>
+  `;
+
+  return '<p>Unknown form type</p>';
+}
+
+// ============================================================
+// IMAGE HANDLING + GEMINI EXTRACTION
+// ============================================================
+let uploadedImageBase64 = null;
+let uploadContext = null;
+
+async function handleImageUpload(input, docType) {
+  const file = input.files[0];
+  if (!file) return;
+  uploadContext = input.id.includes('med') ? 'med' : 'doc';
+  const effectiveDocType = docType === 'auto' ? (document.getElementById('f-doc-type')?.value || 'general') : docType;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    uploadedImageBase64 = e.target.result;
+    // Show preview
+    const prevId = `img-preview-${uploadContext}`;
+    const imgId = `img-prev-${uploadContext}`;
+    document.getElementById(prevId).style.display = 'block';
+    document.getElementById(imgId).src = uploadedImageBase64;
+
+    // Call Gemini via GAS
+    if (APP_CONFIG.GAS_URL !== 'YOUR_GAS_WEB_APP_URL_HERE') {
+      showToast('🤖 Extracting data via AI…');
+      await extractDataFromImage(uploadedImageBase64, effectiveDocType, uploadContext);
+    } else {
+      showToast('Configure GAS URL to enable AI extraction');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function extractDataFromImage(base64, docType, context) {
+  try {
+    const res = await fetch(APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'extract_image',
+        pin: APP_CONFIG.ADMIN_PIN,
+        imageBase64: base64.split(',')[1],
+        docType,
+      }),
+    });
+    const json = await res.json();
+    if (json.success && json.extracted) {
+      displayExtracted(json.extracted, docType, context);
+    }
+  } catch (err) {
+    showToast('AI extraction failed — fill manually');
+  }
+}
+
+function displayExtracted(data, docType, context) {
+  const el = document.getElementById(`extract-${context}`);
+  if (!el) return;
+  el.style.display = 'block';
+
+  let html = '<h4>✨ AI Extracted Data</h4>';
+  if (data.doctor) html += `<div class="extraction-field"><strong>Doctor:</strong> ${data.doctor}</div>`;
+  if (data.date) { html += `<div class="extraction-field"><strong>Date:</strong> ${data.date}</div>`; const dEl = document.getElementById('f-date'); if (dEl) dEl.value = data.date; }
+  if (data.hospital || data.lab_name) html += `<div class="extraction-field"><strong>Hospital/Lab:</strong> ${data.hospital || data.lab_name}</div>`;
+
+  if (docType === 'prescription' && data.medications?.length > 0) {
+    html += `<div class="extraction-field" style="margin-top:6px;"><strong>Medications found:</strong></div>`;
+    data.medications.forEach((m, i) => {
+      html += `<div style="padding:6px 10px;background:white;border-radius:6px;margin-top:4px;font-size:13px;">
+        💊 <strong>${m.drug}</strong> — ${m.dose} · ${m.timing}
+      </div>`;
+      if (i === 0) {
+        const drugEl = document.getElementById('f-drug');
+        const doseEl = document.getElementById('f-dose');
+        const timingEl = document.getElementById('f-timing');
+        if (drugEl) drugEl.value = m.drug;
+        if (doseEl) doseEl.value = m.dose;
+        if (timingEl) timingEl.value = m.timing;
+      }
+    });
+  }
+  if (data.findings) html += `<div class="extraction-field" style="margin-top:6px;"><strong>Findings:</strong> ${data.findings}</div>`;
+  if (data.summary) html += `<div class="extraction-field" style="margin-top:6px;"><strong>Summary:</strong> ${data.summary}</div>`;
+  el.innerHTML = html;
+}
+
+function removeImage(context) {
+  uploadedImageBase64 = null;
+  document.getElementById(`img-preview-${context}`).style.display = 'none';
+  document.getElementById(`img-prev-${context}`).src = '';
+  document.getElementById(`extract-${context}`).style.display = 'none';
+}
+
+// ============================================================
+// FORM SUBMISSION
+// ============================================================
+async function submitForm(type) {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span>Saving…`;
+
+  try {
+    let payload = { pin: APP_CONFIG.ADMIN_PIN };
+
+    if (type === 'medication') {
+      payload.action = 'add_medication';
+      payload.data = {
+        member_id: document.getElementById('f-member').value,
+        drug: document.getElementById('f-drug').value,
+        dose: document.getElementById('f-dose').value,
+        timing: document.getElementById('f-timing').value,
+        start_date: document.getElementById('f-start').value,
+        notes: document.getElementById('f-notes').value,
+        source_image_url: '',
+      };
+      if (!payload.data.drug) { showToast('Drug name required'); btn.disabled = false; btn.textContent = 'Add Medication'; return; }
+    }
+
+    if (type === 'timeline') {
+      payload.action = 'add_timeline';
+      payload.data = {
+        member_id: document.getElementById('f-member').value,
+        date: document.getElementById('f-date').value,
+        event_type: document.getElementById('f-event-type').value,
+        description: document.getElementById('f-desc').value,
+        doctor: document.getElementById('f-doctor').value,
+        notes: document.getElementById('f-notes').value,
+      };
+      if (!payload.data.description) { showToast('Description required'); btn.disabled = false; btn.textContent = 'Add Event'; return; }
+    }
+
+    if (type === 'document') {
+      payload.action = 'upload_document';
+      payload.data = {
+        member_id: document.getElementById('f-member').value,
+        title: document.getElementById('f-title').value,
+        date: document.getElementById('f-date').value,
+        type: document.getElementById('f-doc-type').value,
+        notes: document.getElementById('f-notes').value,
+        imageBase64: uploadedImageBase64 ? uploadedImageBase64.split(',')[1] : null,
+        fileName: `doc_${Date.now()}.jpg`,
+      };
+      if (!payload.data.title) { showToast('Title required'); btn.disabled = false; btn.textContent = 'Upload Document'; return; }
+    }
+
+    if (type === 'doctor') {
+      payload.action = 'add_doctor';
+      payload.data = {
+        name: document.getElementById('f-name').value,
+        specialty: document.getElementById('f-specialty').value,
+        phone: document.getElementById('f-phone').value,
+        type: document.getElementById('f-type').value,
+        clinic: document.getElementById('f-clinic').value,
+        notes: document.getElementById('f-notes').value,
+      };
+      if (!payload.data.name) { showToast('Name required'); btn.disabled = false; btn.textContent = 'Add Doctor'; return; }
+    }
+
+    if (APP_CONFIG.GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+      showToast('Demo mode — configure GAS URL first');
+      btn.disabled = false;
+      btn.textContent = 'Save';
+      return;
+    }
+
+    const res = await fetch(APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (json.success) {
+      showToast('Saved ✓');
+      closeSheet();
+      uploadedImageBase64 = null;
+      await loadData(true);
+    } else {
+      showToast('Error: ' + (json.error || 'Unknown'));
+    }
+  } catch (err) {
+    showToast('Network error — check connection');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save';
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveSettings() {
+  const url = document.getElementById('f-gas-url').value.trim();
+  const pin = document.getElementById('f-pin').value.trim();
+  if (url) { APP_CONFIG.GAS_URL = url; localStorage.setItem('gas_url', url); }
+  if (pin && pin.length === 4) { APP_CONFIG.ADMIN_PIN = pin; localStorage.setItem('admin_pin', pin); }
+  showToast('Settings saved ✓');
+  closeSheet();
+}
+
+function clearCache() {
+  localStorage.removeItem('health_data_cache');
+  localStorage.removeItem('health_data_cache_time');
+  showToast('Cache cleared — reloading…');
+  setTimeout(() => location.reload(), 1000);
+}
+
+// ============================================================
+// SCREEN SWITCHER (override for screens needing render)
+// ============================================================
+const _origShowScreen = showScreen;
+function showScreen(name, pushStack = true) {
+  _origShowScreen(name, pushStack);
+  if (name === 'doctors') renderDoctors();
+  if (name === 'home') renderHome();
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function calcAge(dob) {
+  if (!dob) return '—';
+  const d = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  if (today.getMonth() < d.getMonth() || (today.getMonth() === d.getMonth() && today.getDate() < d.getDate())) age--;
+  return age;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch { return dateStr; }
+}
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
