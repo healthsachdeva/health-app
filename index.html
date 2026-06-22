@@ -1007,6 +1007,10 @@ function showScreen(name, pushStack = true) {
       state.screenStack.push(name);
     }
   }
+
+  // Render screen-specific content
+  if (name === 'doctors') renderDoctors();
+  if (name === 'home') renderHome();
 }
 
 function goBack() {
@@ -1062,9 +1066,8 @@ function openMember(memberId) {
     </div>
   `;
 
-  // Reset tabs
-  document.querySelectorAll('.tab-btn').forEach((t, i) => t.classList.toggle('active', i === 0));
-  switchTab('meds', false);
+  // Reset tabs and render default
+  switchTab('meds');
 
   showScreen('member');
 }
@@ -1647,16 +1650,6 @@ function clearCache() {
   localStorage.removeItem('health_data_cache_time');
   showToast('Cache cleared — reloading…');
   setTimeout(() => location.reload(), 1000);
-}
-
-// ============================================================
-// SCREEN SWITCHER (override for screens needing render)
-// ============================================================
-const _origShowScreen = showScreen;
-function showScreen(name, pushStack = true) {
-  _origShowScreen(name, pushStack);
-  if (name === 'doctors') renderDoctors();
-  if (name === 'home') renderHome();
 }
 
 // ============================================================
